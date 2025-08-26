@@ -1,6 +1,7 @@
 import pandas as pd
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.http import JsonResponse
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
 
@@ -11,8 +12,10 @@ def upload_dataset(request):
     POST: Saves file, runs analysis (synchronous), redirect to detail.
     """
 
-    if request.method == 'POST':
+    if request.method == 'POST' and request.FILES['file']:
+
         form = UploadedDatasetForm(request.POST, request.FILES)
+
         if form.is_valid():
             dataset = form.save(commit=False)
             dataset.original_filename = dataset.file.name
@@ -21,16 +24,32 @@ def upload_dataset(request):
             dataset.status = 'processing'
             dataset.save()
 
-            # Synchronous analysis for small files (up to 10mb).
+            # Load Pandas CSV
             try:
-                dataset.analyze()
+                df = pd.read_csv(dataset.file.path)
+                analysis = {
+                    "rows": df.shape[0],
+                    "columns": df.shape[1],
+                    "column_names": list(df.columns),
+                    "numeric_means": df.describe().loc["mean"].to_dict()
+                }
+                dataset.status = "done"
+                dataset.save()
 
             except Exception:
                 # If analysis did not work - dataset.status set as 'error' in analyze()
-                pass
+                dataset.status = "error"
+                dataset.save()
+                return JsonResponse({"error": "Failed to analyze dataset."}, status=400)
 
-            return redirect('detail', pk=dataset.pk)
+            return JsonResponse({
+                "id": dataset.pk,
+                "name": dataset.original_filename,
+                "analysis": analysis
+            })
 
+
+        # If GET -> show form.
         else:
             form = UploadedDatasetForm()
         return render(request, 'analyzer/upload.html', {'form': form})
