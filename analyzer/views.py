@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
+from .pipelines.pipeline import full_pipeline
 
 
 def upload_dataset(request):
@@ -26,33 +27,28 @@ def upload_dataset(request):
 
             # Load Pandas CSV
             try:
-                df = pd.read_csv(dataset.file.path)
-                analysis = {
-                    "rows": df.shape[0],
-                    "columns": df.shape[1],
-                    "column_names": list(df.columns),
-                    "numeric_means": df.describe().loc["mean"].to_dict()
-                }
-                dataset.status = "done"
+                result = full_pipeline(dataset.file.path)
+                dataset.status = 'done'
                 dataset.save()
 
-            except Exception:
+            except Exception as e:
                 # If analysis did not work - dataset.status set as 'error' in analyze()
                 dataset.status = "error"
                 dataset.save()
-                return JsonResponse({"error": "Failed to analyze dataset."}, status=400)
+                return JsonResponse({"error": str(e)},status=400)
 
-            return JsonResponse({
-                "id": dataset.pk,
-                "name": dataset.original_filename,
-                "analysis": analysis
+            return render(request, 'analyzer/detail.html',{
+                "dataset": dataset,
+                "analysis": analysis,
+                "regression": regression,
             })
 
 
-        # If GET -> show form.
-        else:
-            form = UploadedDatasetForm()
-        return render(request, 'analyzer/upload.html', {'form': form})
+    # If GET -> show form.
+    else:
+        form = UploadedDatasetForm()
+
+    return render(request, 'analyzer/upload.html', {'form': form})
 
 
 def dataset_detail(request, pk):

@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from analyzer import views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('datasets/', include('analyzer.urls')),
+    path('datasets/upload', views.upload_dataset, name=('upload_dataset')),
+    path('datasets/<int:pk>', views.dataset_detail, name='dataset_detail'),
 ]
 
 if settings.DEBUG:
