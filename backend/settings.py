@@ -48,6 +48,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
+MEDIA_ROOT = BASE_DIR / '/media/'
+MEDIA_URL = '/media/'
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

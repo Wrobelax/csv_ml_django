@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>{{ dataset.original_filename }}</h2>
+    <p>Data: {{ dataset.uploaded_at }} | Rows: {{ dataset.n_rows}} | Columns: {{ dataset.n_cols }} | Status: {{ dataset.status }}</p>
+    <h4>View (first 5 rows)</h4>
+    <div>
+        {{ preview_html|safe }}
+    </div>
+    <h4>Basic stats (summary)</h4>
+    <pre>{{ dataset.summary|safe }}</pre>
+    {% if dataset.error_message %}
+        <div class="alert alert-danger">{{ dataset.error_message }}</div>
+    {% endif %}
+{% endblock %}
