@@ -1,14 +1,61 @@
 {% extends "analyzer/base.html" %}
 {% block content %}
-    <h2>{{ dataset.original_filename }}</h2>
-    <p>Data: {{ dataset.uploaded_at }} | Rows: {{ dataset.n_rows}} | Columns: {{ dataset.n_cols }} | Status: {{ dataset.status }}</p>
-    <h4>View (first 5 rows)</h4>
-    <div>
-        {{ preview_html|safe }}
+    <h1 class="display-4">Analysis results for: {{ dataset.name }}</h1>
+    <div class="card mt-4 mb-3">
+        <div class="card-header bg-secondary text-white">Basic information</div>
+        <div class="card-body">
+            <ul class="list-unstyled mb-0">
+                <li><strong>ID:</strong> {{ dataset.id }}</li>
+                <li><strong>File name:</strong> {{ dataset.name }}</li>
+                <li><strong>Number of rows:</strong> {{ analysis.rows }}</li>
+                <li><strong>Number of columns:</strong> {{ analysis.columns }}</li>
+            </ul>
+        </div>
     </div>
-    <h4>Basic stats (summary)</h4>
-    <pre>{{ dataset.summary|safe }}</pre>
-    {% if dataset.error_message %}
-        <div class="alert alert-danger">{{ dataset.error_message }}</div>
-    {% endif %}
+
+    <div class="card mb-3">
+        <div class="card-header bg-secondary text-white">Column names</div>
+        <div class="card-body">
+            <ul>
+                {% for col in analysis.column_names %}
+                    <li>{{ col }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+<div class="card mb-3">
+    <div class="card-header bg-secondary text-white">Average numerical values</div>
+    <div class="card-body">
+        <table class="table table-dark table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Column</th>
+                    <th>Average</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for col, mean in analysis.numeric_means.items %}
+                <tr>
+                    <td>{{ col }}</td>
+                    <td>{{ mean|floatformat:3 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-secondary text-white">Linear Regression</div>
+    <div class="card-body">
+        <ul class="list unstyled mb-0">
+            <li><strong>Regression coefficients:</strong> {{ regression.coefficients }}</li>
+            <li><strong>Intercept:</strong> {{ regression.intercept|floatformat:3 }}</li>
+            <li><strong>R²:</strong> {{ regression.r2_score|floatformat:3 }}</li>
+        </ul>
+    </div>
+</div>
+
+<a href="{% yrl 'upload_dataset' %}" class="btn btn-primary mt-3">Upload new file</a>
 {% endblock %}
