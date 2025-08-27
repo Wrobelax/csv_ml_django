@@ -29,11 +29,12 @@ def upload_dataset(request):
                 result = full_pipeline(dataset.file.path)
                 dataset.analysis = result["analysis"]
                 dataset.regression = result["regression"]
+                dataset.ml_classification = result["ml_classification"]
 
                 dataset.status = 'done'
                 dataset.save()
 
-                # Load preview for template\
+                # Load preview for template
                 df = pd.read_csv(dataset.file.path)
                 preview = df.head().values.tolist()
                 columns = df.columns.tolist()
@@ -50,6 +51,7 @@ def upload_dataset(request):
                 "dataset": dataset,
                 "analysis": dataset.analysis,
                 "regression": dataset.regression,
+                "ml_classification": dataset.ml_classification,
                 "preview": preview,
                 "preview_html": preview_html,
                 "columns": columns,
@@ -71,6 +73,7 @@ def dataset_detail(request, pk):
     dataset = get_object_or_404(UploadedDataset, pk=pk)
     analysis = dataset.analysis
     regression = dataset.regression
+    ml_classification = getattr(dataset, 'ml_classification', None)
 
 
     try:
@@ -88,6 +91,7 @@ def dataset_detail(request, pk):
         "dataset": dataset,
         "analysis": analysis,
         "regression": regression,
+        "ml_classification": ml_classification,
         "preview": preview,
         "columns": columns,
         "preview_html": preview_html,

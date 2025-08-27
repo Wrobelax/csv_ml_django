@@ -1,4 +1,9 @@
 def analyze_dataset(df):
+    """
+    Basic analysis of a data.
+    :param df: Dataframe
+    :return: Rows, columns, column names, average means.
+    """
     return {
         "rows": df.shape[0],
         "columns": df.shape[1],

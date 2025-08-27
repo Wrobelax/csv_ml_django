@@ -18,6 +18,7 @@ class UploadedDataset(models.Model):
 
     analysis = models.JSONField(null=True, blank=True)
     regression = models.JSONField(null=True, blank=True)
+    ml_classification = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.original_filename or f"Dataset {self.id}"
