@@ -31,8 +31,9 @@ def plot_confusion_matrix(cm, classes):
 
     for i in range(cm_arr.shape[0]):
         for j in range(cm_arr.shape[1]):
+            val = int(cm_arr[i, j])
             ax.text(
-                j, i, str(cm[i, j]),
+                j, i, str(val),
                 ha='center',
                 va='center',
                 color='white' if cm_arr[i, j] > cm_arr.max()/2 else 'black'
@@ -48,7 +49,7 @@ def plot_feature_importances(feature_importances: dict):
 
     items = sorted(feature_importances.items(), key=lambda x: x[1], reverse=True)
     names = [i[0] for i in items]
-    vals = [i[0] for i in items]
+    vals = [i[1] for i in items]
     fig, ax = plt.subplots(figsize=(6, max(2, len(names)*0.4)))
     y_pos = range(len(names))
     ax.barh(y_pos, vals)
@@ -83,86 +84,93 @@ def upload_dataset(request):
     POST: Saves file, runs analysis (synchronous), redirect to detail.
     """
 
-    if request.method == 'POST' and request.FILES['file']:
+    if request.method == 'POST' and request.FILES.get('file'):
 
         form = UploadedDatasetForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, 'analyzer/upload.html', {'form': form})
 
-        if form.is_valid():
-            dataset = form.save(commit=False)
-            dataset.original_filename = dataset.file.name
-            if request.user.is_authenticated:
-                dataset.owner = request.user
-            dataset.status = 'processing'
+        dataset = form.save(commit=False)
+        dataset.original_filename = dataset.file.name
+        if request.user.is_authenticated:
+            dataset.owner = request.user
+        dataset.status = 'processing'
+        dataset.save()
+
+        # Run pipeline (returns Python-serializable dicts/lists)
+        try:
+            result = full_pipeline(dataset.file.path)
+            dataset.analysis = result.get("analysis")
+            dataset.regression = result.get("regression")
+            ml_results = result.get("ml_results")
+
+            dataset.status = 'done'
             dataset.save()
 
-            # Load Pandas CSV + full pipeline
-            try:
-                result = full_pipeline(dataset.file.path)
-                dataset.analysis = result["analysis"]
-                dataset.regression = result["regression"]
-                ml_results = result.get("ml_results")
+            # Load preview for template
+            df = pd.read_csv(dataset.file.path)
+            preview = df.head().values.tolist()
+            columns = df.columns.tolist()
+            preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
 
-                dataset.status = 'done'
-                dataset.save()
+            # Generating charts for ML
+            if ml_results:
+                for model_key, model_data in ml_results.items():
+                    if not model_data:
+                        continue
 
-                # Load preview for template
-                df = pd.read_csv(dataset.file.path)
-                preview = df.head().values.tolist()
-                columns = df.columns.tolist()
-                preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
-
-                # Generating charts for ML
-                if ml_results:
-                    for model_key, model_data in ml_results.items():
-                        if not model_data:
-                            continue
-
-                        # Confusion matrix plot
-                        cm = model_data.get("confusion_matrix")
-                        classes = model_data.get("classes")
-                        fi = model_data.get("feature_importances")
-                        plots = {}
-                        if cm and classes:
-                            plots["confusion_matrix"] = plot_confusion_matrix(cm, classes)
-                        else:
-                            plots["confusion_matrix"] = None
-
-                        # Feature importances plot
-                        plots["feature_importances"] = plot_feature_importances(fi) if fi else None
-
-                        ml_results[model_key]["plots"] = plots
+                    plots = {}
 
 
-                        # Regression plot for actual vs. predicted
-                        reg_plot = None
-                        if dataset.regression:
-                            try:
-                                y_test = dataset.regression.get("y_test")
-                                y_pred = dataset.regression.get("y_pred")
-                                if y_test and y_pred:
-                                    reg_plot = plot_regression_pred_actual(y_test, y_pred)
-                            except Exception as e:
-                                dataset.status = 'error'
-                                dataset.save()
-                                return JsonResponse({"error": str(e)},status=400)
+                    # Confusion matrix plot
+                    cm = model_data.get("confusion_matrix")
+                    classes = model_data.get("classes")
+                    fi = model_data.get("feature_importances")
+
+                    if cm and classes:
+                        plots["confusion_matrix"] = plot_confusion_matrix(cm, classes)
+                    else:
+                        plots["confusion_matrix"] = None
+
+                    # Feature importances plot
+                    plots["feature_importances"] = plot_feature_importances(fi) if fi else None
+
+                    model_data["plots"] = plots
 
 
-            except Exception as e:
-                dataset.status = 'error'
-                dataset.save()
-                return JsonResponse({"error": str(e)},status=400)
+                # Regression plot for actual vs. predicted
+                reg_plot = None
+                reg = dataset.regression
+
+                if isinstance(reg, dict):
+                    y_test = reg.get("y_test")
+                    y_pred = reg.get("y_pred")
+
+                    if y_test is not None and y_pred is not None:
+                        y_test_arr = np.asarray(y_test)
+                        y_pred_arr = np.asarray(y_pred)
+
+                        if y_test_arr.size > 0 and y_pred_arr.size > 0:
+                            reg_plot = plot_regression_pred_actual(y_test_arr, y_pred_arr)
 
 
-            return render(request, 'analyzer/detail.html',{
-                "dataset": dataset,
-                "analysis": dataset.analysis,
-                "regression": dataset.regression,
-                "ml_results": dataset.ml_results,
-                "preview": preview,
-                "preview_html": preview_html,
-                "columns": columns,
-                "regression_plot": reg_plot,
-            })
+        except Exception as e:
+            dataset.status = 'error'
+            dataset.save()
+            return JsonResponse({"error": str(e)},status=400)
+
+
+
+        return render(request, 'analyzer/detail.html',{
+            "dataset": dataset,
+            "analysis": dataset.analysis,
+            "regression": dataset.regression,
+            "ml_results": ml_results,
+            "preview": preview,
+            "preview_html": preview_html,
+            "columns": columns,
+            "regression_plot": reg_plot,
+        })
 
 
     # If GET -> show form.

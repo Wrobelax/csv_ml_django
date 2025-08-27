@@ -8,6 +8,20 @@ from sklearn.linear_model import LogisticRegression
 import numpy as np
 
 
+def to_python(obj):
+    """
+    Recursively convert numpy scalar/arrays to python built-in types.
+    """
+    if isinstance(obj, np.generic):
+        return obj.item()
+    if isinstance(obj, dict):
+        return {k: to_python(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [to_python(x) for x in obj]
+
+    return obj
+
+
 def train_model(model, X, y):
     """
     Basic function for data training and prediction.
@@ -20,27 +34,31 @@ def train_model(model, X, y):
     y_pred = model.predict(X_test)
 
     report = classification_report(y_test, y_pred, output_dict=True)
-    cm = confusion_matrix(y_test, y_pred)
-    classes = list(np.unique(y_test).astype(str).tolist())
+
+    cm = confusion_matrix(y_test, y_pred).tolist()
+    classes = [str(x) for x in np.unique(y_test).tolist()]
 
 
     # Feature importances if available
     feature_importances = None
     if hasattr(model, "feature_importances_"):
-        feature_importances = dict(zip(X.columns.tolist(), model.feature_importances_.tolist()))
+        fi_vals = model.feature_importances_.tolist()
+        feature_importances = {col: float(val) for col, val in zip(X.columns.tolist(), fi_vals)}
     elif hasattr(model, "coef_"):
         # Logistic regression: coef_ may be (n_classes, n_features)
         coef = model.coef_
         if coef.ndim == 1:
-            feature_importances = dict(zip(X.columns.tolist(), coef.tolist()))
+            feature_importances = {col: float(val) for col, val in zip(X.columns.tolist(), coef.tolist())}
         else:
             # Multi-class: sum absolute values across classes
             abs_sum = np.abs(coef).sum(axis=0)
-            feature_importances = dict(zip(X.columns.tolist(), abs_sum.tolist()))
+            feature_importances = {col: float(val) for col, val in zip(X.columns.tolist(), abs_sum.tolist())}
 
+    # Normalize report to python types
+    report = to_python(report)
 
     return {
-        "accuracy": accuracy_score(y_test, y_pred),
+        "accuracy": float(accuracy_score(y_test, y_pred)),
         "report": report,
         "confusion_matrix": cm,
         "classes": classes,

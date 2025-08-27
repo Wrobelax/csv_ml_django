@@ -13,7 +13,17 @@ def run_regression(df, target_col=None):
     :return: Coefficients, intercept, r2 score.
     """
 
-    X = df.drop(columns=[target_col])
+    numeric_df = df.select_dtypes(include='number').columns.tolist()
+
+    if len(numeric_df) < 2:
+        return None
+
+    if target_col is None:
+        target_col = numeric_df[-1]
+
+    feature_cols = [c for c in numeric_df if c != target_col]
+
+    X = df[feature_cols]
     y = df[target_col]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -26,8 +36,6 @@ def run_regression(df, target_col=None):
         "coefficients": model.coef_.tolist(),
         "intercept": float(model.intercept_),
         "r2_score": r2_score(y_test, y_pred),
-        "test_values": {
-            "y_test": y_test.tolist(),
-            "y_pred": y_pred.tolist(),
+        "y_test": y_test.tolist(),
+        "y_pred": y_pred.tolist(),
         }
-    }

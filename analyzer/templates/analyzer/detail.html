@@ -2,30 +2,37 @@
 {% load custom_tags %}
 
 {% block content %}
-    <h1 class="display-4">Analysis results for: {{ dataset.name }}</h1>
-    <div class="card mt-4 mb-3">
-        <div class="card-header bg-secondary text-white">Basic information</div>
-        <div class="card-body">
-            <ul class="list-unstyled mb-0">
-                <li><strong>ID:</strong> {{ dataset.id }}</li>
-                <li><strong>File name:</strong> {{ dataset.name }}</li>
-                <li><strong>Number of rows:</strong> {{ analysis.rows }}</li>
-                <li><strong>Number of columns:</strong> {{ analysis.columns }}</li>
-            </ul>
-        </div>
-    </div>
+<h1 class="display-4">Analysis results for: {{ dataset.name }}</h1>
 
-    <div class="card mb-3">
-        <div class="card-header bg-secondary text-white">Column names</div>
-        <div class="card-body">
-            <ul>
-                {% for col in analysis.column_names %}
-                    <li>{{ col }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
 
+<!-- Basic info -->
+<div class="card mt-4 mb-3">
+    <div class="card-header bg-secondary text-white">Basic information</div>
+    <div class="card-body">
+        <ul class="list-unstyled mb-0">
+            <li><strong>ID:</strong> {{ dataset.id }}</li>
+            <li><strong>File name:</strong> {{ dataset.name }}</li>
+            <li><strong>Number of rows:</strong> {{ analysis.rows }}</li>
+            <li><strong>Number of columns:</strong> {{ analysis.columns }}</li>
+        </ul>
+    </div>
+</div>
+
+
+<!-- Column names -->
+<div class="card mb-3">
+    <div class="card-header bg-secondary text-white">Column names</div>
+    <div class="card-body">
+        <ul>
+            {% for col in analysis.column_names %}
+            <li>{{ col }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+
+<!-- Averages -->
 <div class="card mb-3">
     <div class="card-header bg-secondary text-white">Average numerical values</div>
     <div class="card-body">
@@ -48,17 +55,28 @@
     </div>
 </div>
 
+
+<!-- Linear regression -->
 <div class="card mb-3">
     <div class="card-header bg-secondary text-white">Linear Regression</div>
     <div class="card-body">
+        {% if regression %}
         <ul class="list unstyled mb-0">
             <li><strong>Regression coefficients:</strong> {{ regression.coefficients }}</li>
             <li><strong>Intercept:</strong> {{ regression.intercept|floatformat:3 }}</li>
             <li><strong>R²:</strong> {{ regression.r2_score|floatformat:3 }}</li>
         </ul>
+        {% if regression.plot %}
+            <img src="data:image/png;base64,{{ regression_plot }}" class="img-fluid" alt="Regression plot">
+        {% endif %}
+        {% else %}
+            <p>No regression available.</p>
+        {% endif %}
     </div>
 </div>
 
+
+<!-- Data preview -->
 <div class="card mb-3">
     <div class="card-header bg-secondary text-white">Data preview (first 5 rows)</div>
     <div class="card-body table-responsive">
@@ -66,6 +84,8 @@
     </div>
 </div>
 
+
+<!-- ML models -->
 {% if ml_results %}
     {% for model_name, model_data in ml_results.items %}
         {% if model_data %}
@@ -78,7 +98,7 @@
                         <thead>
                             <tr>
                                 <th>Class</th>
-                                <th>Precission</th>
+                                <th>Precision</th>
                                 <th>Recall</th>
                                 <th>F1-score</th>
                                 <th>Support</th>
@@ -99,9 +119,15 @@
                         </tbody>
                     </table>
                 </div>
+                {% endif %}
+
+                <!-- Confusion matrix -->
+                {% if model_data.plots.confusion_matrix %}
+                    <h6 class="mt-3">Confusion Matrix</h6>
+                    <img src="data:image/png;base64, {{model_data.plots.confusion_matrix }}" class="img-fluid">
+                {% endif %}
             </div>
         </div>
-        {% endif %}
     {% endfor %}
 {% endif %}
 
