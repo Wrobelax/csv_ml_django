@@ -10,6 +10,13 @@ from .ml_classification import (
 )
 
 
+def _nice_name(key: str) -> str:
+    """
+    Let's sprinkle this boi with cool name.
+    """
+    return key.replace("_", " ").replace("classification", "").title().strip()
+
+
 def full_pipeline(file_path: str) -> dict:
     """
     Linking all stepsL analysis -> ML
@@ -26,8 +33,6 @@ def full_pipeline(file_path: str) -> dict:
     # Linear regression
     regression = run_regression(df)
 
-
-
     # ML classification
     ml_results = {}
     target_col = df.columns[-1]
@@ -40,6 +45,12 @@ def full_pipeline(file_path: str) -> dict:
         ml_results["knn_classification"] = knn_classification(df, target_col)
     else:
         ml_results = None
+
+    # Display name for each model.
+    if ml_results:
+        for k,v in list(ml_results.items()):
+            display = _nice_name(k)
+            ml_results[k]["display_name"] = display
 
     return {
         "analysis": analysis,

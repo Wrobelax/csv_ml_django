@@ -1,38 +1,51 @@
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+import numpy as np
 
 
-def train_model(df, model_class, target_col= None):
+def train_model(model, X, y):
     """
-    Basic function for data training.
-    :param df: Dataframe
-    :param model_class: Model class
-    :param target_col: Column targeted for training. If none -> Last column from the data.
-    :return: Accuracy, report.
+    Basic function for data training and prediction.
+    :return: Accuracy, report, confusion matrix, classes, feature importance.
     """
-
-    if target_col is None:
-        target_col = df.columns[-1]
-
-    X = df.drop(columns=[target_col])
-    y = df[target_col]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    model = model_class()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
+    report = classification_report(y_test, y_pred, output_dict=True)
+    cm = confusion_matrix(y_test, y_pred)
+    classes = list(np.unique(y_test).astype(str).tolist())
+
+
+    # Feature importances if available
+    feature_importances = None
+    if hasattr(model, "feature_importances_"):
+        feature_importances = dict(zip(X.columns.tolist(), model.feature_importances_.tolist()))
+    elif hasattr(model, "coef_"):
+        # Logistic regression: coef_ may be (n_classes, n_features)
+        coef = model.coef_
+        if coef.ndim == 1:
+            feature_importances = dict(zip(X.columns.tolist(), coef.tolist()))
+        else:
+            # Multi-class: sum absolute values across classes
+            abs_sum = np.abs(coef).sum(axis=0)
+            feature_importances = dict(zip(X.columns.tolist(), abs_sum.tolist()))
+
+
     return {
         "accuracy": accuracy_score(y_test, y_pred),
-        "report": classification_report(y_test, y_pred, output_dict=True),
+        "report": report,
+        "confusion_matrix": cm,
+        "classes": classes,
+        "feature_importances": feature_importances,
     }
-
 
 
 def random_forest_classification(df, target_col=None):
@@ -42,7 +55,14 @@ def random_forest_classification(df, target_col=None):
     :param target_col: Target column for the model.
     :return: Accuracy score, report.
     """
-    return train_model(df, RandomForestClassifier, target_col)
+
+    if target_col is None:
+        target_col = df.columns[-1]
+    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+    y = df[target_col]
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+    return train_model(model, X, y)
 
 
 def logistic_regression_classification(df, target_col=None):
@@ -52,7 +72,14 @@ def logistic_regression_classification(df, target_col=None):
     :param target_col: Target column for the model.
     :return: Accuracy score, report.
     """
-    return train_model(df, LogisticRegression, target_col)
+
+    if target_col is None:
+        target_col = df.columns[-1]
+    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+    y = df[target_col]
+    model = LogisticRegression(max_iter=200)
+
+    return train_model(model, X, y)
 
 
 def knn_classification(df, target_col=None):
@@ -62,7 +89,15 @@ def knn_classification(df, target_col=None):
     :param target_col: Target column for the model.
     :return: Accuracy score, report.
     """
-    return train_model(df, KNeighborsClassifier, target_col)
+
+    if target_col is None:
+        target_col = df.columns[-1]
+    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+    y = df[target_col]
+    model = KNeighborsClassifier()
+
+    return train_model(model, X, y)
+
 
 def decision_tree_classification(df, target_col=None):
     """
@@ -71,7 +106,14 @@ def decision_tree_classification(df, target_col=None):
     :param target_col: Target column for the model.
     :return: Accuracy score, report.
     """
-    return train_model(df, DecisionTreeClassifier, target_col)
+
+    if target_col is None:
+        target_col = df.columns[-1]
+    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+    y = df[target_col]
+    model = DecisionTreeClassifier(random_state=42)
+
+    return train_model(model, X, y)
 
 
 def svm_classification(df, target_col=None):
@@ -81,4 +123,11 @@ def svm_classification(df, target_col=None):
     :param target_col: Target column for the model.
     :return: Accuracy score, report.
     """
-    return train_model(df, SVC, target_col)
+
+    if target_col is None:
+        target_col = df.columns[-1]
+    X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
+    y = df[target_col]
+    model = SVC()
+
+    return train_model(model, X, y)

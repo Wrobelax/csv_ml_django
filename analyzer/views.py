@@ -4,6 +4,77 @@ from django.http import JsonResponse
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
 from .pipelines.pipeline import full_pipeline
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+import io, base64
+
+
+def fig_to_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight')
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('ascii')
+
+
+def plot_confusion_matrix(cm, classes):
+    fig, ax = plt.subplots(figsize=(4,3))
+    cm_arr = np.array(cm)
+    im = ax.imshow(cm_arr, interpolation='nearest', aspect='auto')
+    ax.set_title("Confusion matrix")
+    ax.set_xticks(np.arange(len(classes)))
+    ax.set_xticklabels(classes, rotation=45, ha='right')
+    ax.set_yticks(np.arange(len(classes)))
+    ax.set_yticklabels(classes)
+
+    for i in range(cm_arr.shape[0]):
+        for j in range(cm_arr.shape[1]):
+            ax.text(
+                j, i, str(cm[i, j]),
+                ha='center',
+                va='center',
+                color='white' if cm_arr[i, j] > cm_arr.max()/2 else 'black'
+            )
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+    return fig_to_base64(fig)
+
+
+def plot_feature_importances(feature_importances: dict):
+    if not feature_importances:
+        return None
+
+    items = sorted(feature_importances.items(), key=lambda x: x[1], reverse=True)
+    names = [i[0] for i in items]
+    vals = [i[0] for i in items]
+    fig, ax = plt.subplots(figsize=(6, max(2, len(names)*0.4)))
+    y_pos = range(len(names))
+    ax.barh(y_pos, vals)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(names)
+    ax.invert_yaxis()
+    ax.set_xlabel("Importance")
+    ax.set_title("Feature importances")
+
+    return fig_to_base64(fig)
+
+
+def plot_regression_pred_actual(y_true, y_pred):
+    y_true = np.array(y_true)
+    y_pred = np.array(y_pred)
+
+    fig, ax = plt.subplots(figsize=(5,4))
+    ax.scatter(y_true, y_pred, alpha=0.7)
+    mn = min(min(y_true), min(y_pred))
+    mx= max(max(y_true), max(y_pred))
+    ax.plot([mn,mx], [mn,mx], "--", linewidth=1)
+    ax.set_xlabel("Actual")
+    ax.set_ylabel("Predicted")
+    ax.set_title("Actual vs. Predicted")
+
+    return fig_to_base64(fig)
 
 
 def upload_dataset(request):
@@ -29,7 +100,7 @@ def upload_dataset(request):
                 result = full_pipeline(dataset.file.path)
                 dataset.analysis = result["analysis"]
                 dataset.regression = result["regression"]
-                dataset.ml_results = result["ml_results"]
+                ml_results = result.get("ml_results")
 
                 dataset.status = 'done'
                 dataset.save()
@@ -40,12 +111,47 @@ def upload_dataset(request):
                 columns = df.columns.tolist()
                 preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
 
+                # Generating charts for ML
+                if ml_results:
+                    for model_key, model_data in ml_results.items():
+                        if not model_data:
+                            continue
+
+                        # Confusion matrix plot
+                        cm = model_data.get("confusion_matrix")
+                        classes = model_data.get("classes")
+                        fi = model_data.get("feature_importances")
+                        plots = {}
+                        if cm and classes:
+                            plots["confusion_matrix"] = plot_confusion_matrix(cm, classes)
+                        else:
+                            plots["confusion_matrix"] = None
+
+                        # Feature importances plot
+                        plots["feature_importances"] = plot_feature_importances(fi) if fi else None
+
+                        ml_results[model_key]["plots"] = plots
+
+
+                        # Regression plot for actual vs. predicted
+                        reg_plot = None
+                        if dataset.regression:
+                            try:
+                                y_test = dataset.regression.get("y_test")
+                                y_pred = dataset.regression.get("y_pred")
+                                if y_test and y_pred:
+                                    reg_plot = plot_regression_pred_actual(y_test, y_pred)
+                            except Exception as e:
+                                dataset.status = 'error'
+                                dataset.save()
+                                return JsonResponse({"error": str(e)},status=400)
+
 
             except Exception as e:
-                # If analysis did not work - dataset.status set as 'error' in analyze()
-                dataset.status = "error"
+                dataset.status = 'error'
                 dataset.save()
                 return JsonResponse({"error": str(e)},status=400)
+
 
             return render(request, 'analyzer/detail.html',{
                 "dataset": dataset,
@@ -55,6 +161,7 @@ def upload_dataset(request):
                 "preview": preview,
                 "preview_html": preview_html,
                 "columns": columns,
+                "regression_plot": reg_plot,
             })
 
 
