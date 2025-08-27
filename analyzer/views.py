@@ -1,6 +1,5 @@
 import pandas as pd
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
@@ -25,11 +24,17 @@ def upload_dataset(request):
             dataset.status = 'processing'
             dataset.save()
 
-            # Load Pandas CSV
+            # Load Pandas CSV + full pipeline
             try:
                 result = full_pipeline(dataset.file.path)
                 dataset.status = 'done'
                 dataset.save()
+
+                # Load preview for template\
+                df = pd.read_csv(dataset.file.path)
+                preview = df.head().values.tolist()
+                columns = df.columns.tolist()
+
 
             except Exception as e:
                 # If analysis did not work - dataset.status set as 'error' in analyze()
@@ -39,8 +44,8 @@ def upload_dataset(request):
 
             return render(request, 'analyzer/detail.html',{
                 "dataset": dataset,
-                "analysis": analysis,
-                "regression": regression,
+                "analysis": dataset.analysis,
+                "regression": dataset.regression,
             })
 
 
@@ -57,17 +62,23 @@ def dataset_detail(request, pk):
     """
 
     dataset = get_object_or_404(UploadedDataset, pk=pk)
-    preview_html = ""
+    analysis = dataset.analysis
+    regression = dataset.regression
 
     try:
         df = pd.read_csv(dataset.file.path)
-        preview_html = df.head().to_html(index=False, classes='table table-sm')
+        preview = df.head().values.tolist()
+        columns = df.columns.tolist()
 
     except Exception:
-        preview_html = "<p>Can't load file view.</p>"
+        preview = []
+        columns = []
 
 
     return render(request, 'analyzer/detail.html', {
-        'dataset': dataset,
-        'preview_html': preview_html,
+        "dataset": dataset,
+        "analysis": analysis,
+        "regression": regression,
+        "preview": preview,
+        "columns": columns,
     })

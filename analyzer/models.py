@@ -14,9 +14,13 @@ class UploadedDataset(models.Model):
     summary = models.JSONField(null=True, blank=True)
     status = models.CharField(max_length=32, default='uploaded')
     error_message = models.TextField(null=True, blank=True)
+    name = models.CharField(max_length=255)
+
+    analysis = models.JSONField(null=True, blank=True)
+    regression = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return f"{self.original_filename} {self.uploaded_at:%Y-%m-%d %H:%M}"
+        return self.name
 
 
     def analyze(self):
