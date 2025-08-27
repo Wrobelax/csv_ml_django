@@ -20,7 +20,7 @@ class UploadedDataset(models.Model):
     regression = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return self.original_filename or f"Dataset {self.id}"
 
 
     def analyze(self):

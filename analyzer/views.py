@@ -27,6 +27,9 @@ def upload_dataset(request):
             # Load Pandas CSV + full pipeline
             try:
                 result = full_pipeline(dataset.file.path)
+                dataset.analysis = result["analysis"]
+                dataset.regression = result["regression"]
+
                 dataset.status = 'done'
                 dataset.save()
 
@@ -34,6 +37,7 @@ def upload_dataset(request):
                 df = pd.read_csv(dataset.file.path)
                 preview = df.head().values.tolist()
                 columns = df.columns.tolist()
+                preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
 
 
             except Exception as e:
@@ -46,6 +50,9 @@ def upload_dataset(request):
                 "dataset": dataset,
                 "analysis": dataset.analysis,
                 "regression": dataset.regression,
+                "preview": preview,
+                "preview_html": preview_html,
+                "columns": columns,
             })
 
 
@@ -65,15 +72,17 @@ def dataset_detail(request, pk):
     analysis = dataset.analysis
     regression = dataset.regression
 
+
     try:
         df = pd.read_csv(dataset.file.path)
         preview = df.head().values.tolist()
         columns = df.columns.tolist()
+        preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
 
     except Exception:
         preview = []
         columns = []
-
+        preview_html = []
 
     return render(request, 'analyzer/detail.html', {
         "dataset": dataset,
@@ -81,4 +90,5 @@ def dataset_detail(request, pk):
         "regression": regression,
         "preview": preview,
         "columns": columns,
+        "preview_html": preview_html,
     })
