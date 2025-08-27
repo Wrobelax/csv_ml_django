@@ -66,39 +66,43 @@
     </div>
 </div>
 
-{% if ml_classification %}
-<div class="card mb-3">
-    <div class="card-header bg-secondary text-white">Random Forest Classification</div>
-    <div class="card-body">
-        <p><strong>Accuracy:</strong> {{ ml_classification.accuracy|floatformat:3 }}</p>
-        <div class="table-responsive">
-            <table class="table table-dark table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Class</th>
-                        <th>Precission</th>
-                        <th>Recall</th>
-                        <th>F1-score</th>
-                        <th>Support</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cls, metrics in ml_classification.report.items %}
-                        {% if cls != 'accuracy' and cls != 'macro avg' and cls != 'weighted avg' %}
-                        <tr>
-                            <td>{{ cls }}</td>
-                            <td>{{ metrics.precision|floatformat:3 }}</td>
-                            <td>{{ metrics.recall|floatformat:3 }}</td>
-                            <td>{{ metrics|get_item:"f1-score"|floatformat:3 }}</td>
-                            <td>{{ metrics.support }}</td>
-                        </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
+{% if ml_results %}
+    {% for model_name, model_data in ml_results.items %}
+        {% if model_data %}
+        <div class="card mb-3">
+            <div class="card-header bg-secondary text-white">{{ model_name|title }} Classification</div>
+            <div class="card-body">
+                <p><strong>Accuracy:</strong> {{ ml_results.accuracy|floatformat:3 }}</p>
+                <div class="table-responsive">
+                    <table class="table table-dark table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Precission</th>
+                                <th>Recall</th>
+                                <th>F1-score</th>
+                                <th>Support</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cls, metrics in model_data.report.items %}
+                                {% if cls != 'accuracy' and cls != 'macro avg' and cls != 'weighted avg' %}
+                                <tr>
+                                    <td>{{ cls }}</td>
+                                    <td>{{ metrics.precision|floatformat:3 }}</td>
+                                    <td>{{ metrics.recall|floatformat:3 }}</td>
+                                    <td>{{ metrics|get_item:"f1-score"|floatformat:3 }}</td>
+                                    <td>{{ metrics.support }}</td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
+        {% endif %}
+    {% endfor %}
 {% endif %}
 
 <a href="{% url 'upload_dataset' %}" class="btn btn-primary mt-3">Upload new file</a>

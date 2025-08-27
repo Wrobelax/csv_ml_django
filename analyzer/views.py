@@ -29,7 +29,7 @@ def upload_dataset(request):
                 result = full_pipeline(dataset.file.path)
                 dataset.analysis = result["analysis"]
                 dataset.regression = result["regression"]
-                dataset.ml_classification = result["ml_classification"]
+                dataset.ml_results = result["ml_results"]
 
                 dataset.status = 'done'
                 dataset.save()
@@ -51,7 +51,7 @@ def upload_dataset(request):
                 "dataset": dataset,
                 "analysis": dataset.analysis,
                 "regression": dataset.regression,
-                "ml_classification": dataset.ml_classification,
+                "ml_results": dataset.ml_results,
                 "preview": preview,
                 "preview_html": preview_html,
                 "columns": columns,
@@ -73,7 +73,7 @@ def dataset_detail(request, pk):
     dataset = get_object_or_404(UploadedDataset, pk=pk)
     analysis = dataset.analysis
     regression = dataset.regression
-    ml_classification = getattr(dataset, 'ml_classification', None)
+    ml_results = getattr(dataset, 'ml_results', None)
 
 
     try:
@@ -91,7 +91,7 @@ def dataset_detail(request, pk):
         "dataset": dataset,
         "analysis": analysis,
         "regression": regression,
-        "ml_classification": ml_classification,
+        "ml_results": ml_results,
         "preview": preview,
         "columns": columns,
         "preview_html": preview_html,
