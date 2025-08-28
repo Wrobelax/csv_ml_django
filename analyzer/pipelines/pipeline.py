@@ -28,17 +28,24 @@ def detect_task_type(df, target_col: str) -> str:
     """
 
     target = df[target_col]
-    if target.dtype == "object":
+    if pd.api.types.is_object_dtype(target) or pd.api.types.is_categorical_dtype(target):
         return "classification"
-    elif np.issubdtype(target.dtype, np.integer):
+
+    # Treat small-cardinary integers as classification (e.g. 0/1)
+    if np.issubdtype(target.dtype, np.integer):
         if target.nunique() <= 10:
             return "classification"
         else:
             return "regression"
-    elif np.issubdtype(target.dtype, np.floating):
+
+    if np.issubdtype(target.dtype, np.floating):
         return "regression"
-    else:
-        return "unknown"
+
+    # Fallback - if only two unique values treat as classification.
+    if target.nunique() <= 10:
+        return "classification"
+
+    return "regression"
 
 
 def full_pipeline(file_path: str) -> dict:
@@ -67,26 +74,35 @@ def full_pipeline(file_path: str) -> dict:
 
     # Setting targeted column (last)
     target_col = df.columns[-1]
-    target_dtype = df[target_col].dtype
+
+    # Detect task type
+    task_type = detect_task_type(df, target_col)
 
     regression = None
     ml_results = None
 
-    # If target is numerical -> regression
     numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
-    if len(numeric_cols) >= 2:
-        target_for_reg = numeric_cols[-1]
+    reg_target = None
+
+    # Iterate from the end to pick "last suitable numeric"
+    for c in reversed(numeric_cols):
+        col = df[c]
+        if np.issubdtype(col.dtype, np.floating):
+            reg_target = c
+            break
+
+        if np.issubdtype(col.dtype, np.integer) and col.nunique() > 10:
+            reg_target = c
+            break
+
+    if task_type == "regression" or (reg_target is not None and len(numeric_cols) >= 2):
+        numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
         try:
-            regression = run_regression(df, target_for_reg)
+            regression = run_regression(df, reg_target)
         except Exception as e:
             regression = {"error": str(e)}
-    else:
-        regression = None
 
-
-    # If target is categorical -> classification
-
-    if pd.api.types.is_object_dtype(target_dtype) or pd.api.types.is_categorical_dtype(target_dtype):
+    if task_type == "classification":
         ml_results = {
             "random_forest_classification": random_forest_classification(df, target_col),
             "logistic_regression_classification": logistic_regression_classification(df, target_col),
