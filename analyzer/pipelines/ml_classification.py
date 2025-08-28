@@ -33,10 +33,21 @@ def train_model(model, X, y):
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
 
-    report = classification_report(y_test, y_pred, output_dict=True)
 
+    # Try to get probability estimates
+    y_proba = None
+    try:
+        if hasattr(model, 'predict_proba'):
+            y_proba = model.predict_proba(X_test)
+        elif hasattr(model, 'decision_function'):
+            # Fallback - decision model may be available depending on model
+            y_proba = model.decision_function(X_test)
+    except Exception:
+        y_proba = None
+
+    report = classification_report(y_test, y_pred, output_dict=True)
     cm = confusion_matrix(y_test, y_pred).tolist()
-    classes = [str(x) for x in np.unique(y_test).tolist()]
+    classes = list(np.unique(y_test).astype(str).tolist())
 
 
     # Feature importances if available
@@ -54,8 +65,7 @@ def train_model(model, X, y):
             abs_sum = np.abs(coef).sum(axis=0)
             feature_importances = {col: float(val) for col, val in zip(X.columns.tolist(), abs_sum.tolist())}
 
-    # Normalize report to python types
-    report = to_python(report)
+
 
     return {
         "accuracy": float(accuracy_score(y_test, y_pred)),
@@ -63,6 +73,9 @@ def train_model(model, X, y):
         "confusion_matrix": cm,
         "classes": classes,
         "feature_importances": feature_importances,
+        "y_test": np.asarray(y_test).tolist(),
+        "y_pred": np.asarray(y_pred).tolist(),
+        "y_proba": None if y_proba is None else (np.asarray(y_proba).tolist()),
     }
 
 
@@ -146,6 +159,6 @@ def svm_classification(df, target_col=None):
         target_col = df.columns[-1]
     X = df.drop(columns=[target_col]).select_dtypes(include=[np.number])
     y = df[target_col]
-    model = SVC()
+    model = SVC(probability=True)
 
     return train_model(model, X, y)

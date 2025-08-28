@@ -9,6 +9,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import io, base64
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
 
 
 def fig_to_base64(fig):
@@ -17,6 +19,54 @@ def fig_to_base64(fig):
     plt.close(fig)
     buf.seek(0)
     return base64.b64encode(buf.read()).decode('ascii')
+
+
+def plot_prediction_distribution(y_pred):
+    if y_pred is None:
+        return None
+
+    arr = np.array(y_pred, dtype=object)
+    classes, counts = np.unique(arr, return_counts=True)
+    fig, ax = plt.subplots(figsize=(5,3))
+    ax.bar(classes.astype(str), counts)
+    ax.set_title("Prediction distribution")
+    ax.set_xlabel("Predicted class")
+    ax.set_ylabel("Count")
+    return fig_to_base64(fig)
+
+
+def plot_roc_curve(y_test, y_proba, classes):
+    try:
+        y_true = np.array(y_test)
+        y_score = np.array(y_proba)
+
+        # If y_score is 1D (decision_function single score) convert to 2D
+        if y_score.ndim == 1:
+            y_score = np.vstack([1- y_score, y_score]).T
+
+        # Binarize y_true to shape(n_samples, n_classes)
+        classes_unique = list(classes)
+        y_true_bin = label_binarize(y_true, classes=classes_unique)
+        n_classes = y_true_bin.shape[1]
+
+        fig, ax = plt.subplots(figsize=(5,4))
+        for i in range(n_classes):
+            try:
+                fpr, tpr, _ = roc_curve(y_true_bin[:, i], y_score[:, i])
+                roc_auc = auc(fpr, tpr)
+                ax.plot(fpr, tpr, lw=2, label=f"{classes_unique[i]} (AUC={roc_auc:.2f})")
+            except Exception:
+                continue
+
+        ax.plot([0, 1], [0, 1], 'k--', lw=1)
+        ax.set_xlabel("False positive rate")
+        ax.set_ylabel("True positive rate")
+        ax.set_title("ROC curve (one-vs-rest)")
+        ax.legend(loc="lower right", fontsize="small")
+        return fig_to_base64(fig)
+
+    except Exception:
+        return None
 
 
 def plot_confusion_matrix(cm, classes):
@@ -136,6 +186,21 @@ def upload_dataset(request):
 
                     # Feature importances plot
                     plots["feature_importances"] = plot_feature_importances(fi) if fi else None
+
+                    model_data["plots"] = plots
+
+
+                    # Prediction distribution
+                    y_test = model_data.get("y_test")
+                    y_pred = model_data.get("y_pred")
+                    y_proba = model_data.get("y_proba")
+                    plots["prediction_dist"] = plot_prediction_distribution(y_pred) if y_pred is not None else None
+
+                    # Roc curve if probabilities available
+                    if y_proba is not None and classes:
+                        plots["roc_curve"] = plot_roc_curve(y_test, y_proba, classes)
+                    else:
+                        plots["roc_curve"] = None
 
                     model_data["plots"] = plots
 

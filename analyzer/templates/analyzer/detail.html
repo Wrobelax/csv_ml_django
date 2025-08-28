@@ -120,12 +120,31 @@
                     </table>
                 </div>
                 {% endif %}
+                    <div class="row mt-3">
+                    <!-- Confusion matrix -->
+                    {% if model_data.plots.confusion_matrix %}
+                        <h6 class="col-md-3 text-center">Confusion Matrix</h6>
+                        <img src="data:image/png;base64, {{ model_data.plots.confusion_matrix }}" class="img-fluid">
+                    {% endif %}
 
-                <!-- Confusion matrix -->
-                {% if model_data.plots.confusion_matrix %}
-                    <h6 class="mt-3">Confusion Matrix</h6>
-                    <img src="data:image/png;base64, {{model_data.plots.confusion_matrix }}" class="img-fluid">
-                {% endif %}
+                    <!-- Feature importances -->
+                    {% if model_data.plots.feature_importances %}
+                        <h6 class="col-md-3 text-center">Feature Importances</h6>
+                        <img src="data:image/png;base64, {{ model_data.plots.feature_importances }}" class="img-fluid">
+                    {% endif %}
+
+                    <!-- Prediction distribution -->
+                    {% if model_data.plots.prediction_dist %}
+                        <h6 class="col-md-3 text-center">Prediction Distribution</h6>
+                        <img src="data:image/png;base64, {{ model_data.plots.prediction_dist }}" class="img-fluid">
+                    {% endif %}
+
+                    <!-- ROC curve -->
+                    {% if model_data.plots.roc_curve %}
+                        <h6 class="col-md-3 text-center">ROC curve</h6>
+                        <img src="data:image/png;base64, {{ model_data.plots.roc_curve }}" class="img-fluid">
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% endfor %}
