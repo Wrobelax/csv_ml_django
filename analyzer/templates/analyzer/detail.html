@@ -6,7 +6,7 @@
 
 
 <!-- Basic info -->
-<div class="card mt-4 mb-3">
+<div class="card mt-4 mb-3 text-dark">
     <div class="card-header bg-secondary text-white">Basic information</div>
     <div class="card-body">
         <ul class="list-unstyled mb-0">
@@ -20,7 +20,7 @@
 
 
 <!-- Column names -->
-<div class="card mb-3">
+<div class="card mb-3 text-dark">
     <div class="card-header bg-secondary text-white">Column names</div>
     <div class="card-body">
         <ul>
@@ -119,34 +119,46 @@
                         </tbody>
                     </table>
                 </div>
-                {% endif %}
-                    <div class="row mt-3">
+
+                <!-- ML Visualization -->
+                {% if model_data.plots %}
+                <div class="row mt-3">
                     <!-- Confusion matrix -->
                     {% if model_data.plots.confusion_matrix %}
-                        <h6 class="col-md-3 text-center">Confusion Matrix</h6>
-                        <img src="data:image/png;base64, {{ model_data.plots.confusion_matrix }}" class="img-fluid">
+                    <div class="col-md-3 text-center mb-3">
+                        <h6>Confusion Matrix</h6>
+                        <img src="data:image/png;base64,{{ model_data.plots.confusion_matrix }}" class="img-fluid">
+                    </div>
                     {% endif %}
 
                     <!-- Feature importances -->
                     {% if model_data.plots.feature_importances %}
-                        <h6 class="col-md-3 text-center">Feature Importances</h6>
-                        <img src="data:image/png;base64, {{ model_data.plots.feature_importances }}" class="img-fluid">
+                    <div class="col-md-3 text-center mb-3">
+                        <h6>Feature Importances</h6>
+                        <img src="data:image/png;base64,{{ model_data.plots.feature_importances }}" class="img-fluid">
+                    </div>
                     {% endif %}
 
                     <!-- Prediction distribution -->
                     {% if model_data.plots.prediction_dist %}
-                        <h6 class="col-md-3 text-center">Prediction Distribution</h6>
-                        <img src="data:image/png;base64, {{ model_data.plots.prediction_dist }}" class="img-fluid">
+                    <div class="col-md-3 text-center mb-3">
+                        <h6>Prediction Distribution</h6>
+                        <img src="data:image/png;base64,{{ model_data.plots.prediction_dist }}" class="img-fluid">
+                    </div>
                     {% endif %}
 
                     <!-- ROC curve -->
                     {% if model_data.plots.roc_curve %}
-                        <h6 class="col-md-3 text-center">ROC curve</h6>
-                        <img src="data:image/png;base64, {{ model_data.plots.roc_curve }}" class="img-fluid">
+                    <div class="col-md-3 text-center mb-3">
+                        <h6>ROC curve</h6>
+                        <img src="data:image/png;base64,{{ model_data.plots.roc_curve }}" class="img-fluid">
+                    </div>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
     {% endfor %}
 {% endif %}
 
