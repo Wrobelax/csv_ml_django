@@ -84,6 +84,8 @@ def upload_dataset(request):
     POST: Saves file, runs analysis (synchronous), redirect to detail.
     """
 
+    reg_plot = None
+
     if request.method == 'POST' and request.FILES.get('file'):
 
         form = UploadedDatasetForm(request.POST, request.FILES)
@@ -139,19 +141,17 @@ def upload_dataset(request):
 
 
                 # Regression plot for actual vs. predicted
-                reg_plot = None
                 reg = dataset.regression
 
                 if isinstance(reg, dict):
                     y_test = reg.get("y_test")
                     y_pred = reg.get("y_pred")
 
-                    if y_test is not None and y_pred is not None:
-                        y_test_arr = np.asarray(y_test)
-                        y_pred_arr = np.asarray(y_pred)
-
-                        if y_test_arr.size > 0 and y_pred_arr.size > 0:
-                            reg_plot = plot_regression_pred_actual(y_test_arr, y_pred_arr)
+                    if y_test and y_pred and len(y_test) > 0 and len(y_pred) > 0:
+                        reg_plot = plot_regression_pred_actual(y_test, y_pred)
+                        dataset.regression_plot = reg_plot
+                dataset.status = 'done'
+                dataset.save()
 
 
         except Exception as e:
@@ -189,6 +189,7 @@ def dataset_detail(request, pk):
     analysis = dataset.analysis
     regression = dataset.regression
     ml_results = getattr(dataset, 'ml_results', None)
+    reg_plot = dataset.regression_plot
 
 
     try:
@@ -196,6 +197,7 @@ def dataset_detail(request, pk):
         preview = df.head().values.tolist()
         columns = df.columns.tolist()
         preview_html = df.head().to_html(index=False, classes='table table-bordered table-striped')
+
 
     except Exception:
         preview = []
@@ -210,4 +212,5 @@ def dataset_detail(request, pk):
         "preview": preview,
         "columns": columns,
         "preview_html": preview_html,
+        "regression_plot": reg_plot,
     })

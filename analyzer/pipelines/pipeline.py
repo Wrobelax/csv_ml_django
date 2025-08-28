@@ -8,6 +8,7 @@ from .ml_classification import (
     decision_tree_classification,
     svm_classification
 )
+import numpy as np
 
 
 def _nice_name(key: str) -> str:
@@ -15,6 +16,29 @@ def _nice_name(key: str) -> str:
     Let's sprinkle this boi with cool name.
     """
     return key.replace("_", " ").replace("classification", "").title().strip()
+
+
+def detect_task_type(df, target_col: str) -> str:
+    """
+    Automatically checks if data is for regression or classification.
+    Rules:
+        - Object target (string) -> classification
+        - Numerical target (int) with <= 10 unique values -> classification
+        - Numerical target (float) -> regression
+    """
+
+    target = df[target_col]
+    if target.dtype == "object":
+        return "classification"
+    elif np.issubdtype(target.dtype, np.integer):
+        if target.nunique() <= 10:
+            return "classification"
+        else:
+            return "regression"
+    elif np.issubdtype(target.dtype, np.floating):
+        return "regression"
+    else:
+        return "unknown"
 
 
 def full_pipeline(file_path: str) -> dict:
@@ -28,7 +52,10 @@ def full_pipeline(file_path: str) -> dict:
     df = pd.read_csv(file_path)
 
     # Basic analysis
-    analysis = analyze_dataset(df)
+    try:
+        analysis = analyze_dataset(df)
+    except TypeError:
+        analysis = analyze_dataset(file_path)
 
     # Protection from empty df
     if df.shape[1] == 0:
@@ -46,11 +73,15 @@ def full_pipeline(file_path: str) -> dict:
     ml_results = None
 
     # If target is numerical -> regression
-    if pd.api.types.is_numeric_dtype(target_dtype):
+    numeric_cols = df.select_dtypes(include=["number"]).columns.tolist()
+    if len(numeric_cols) >= 2:
+        target_for_reg = numeric_cols[-1]
         try:
-            regression = run_regression(df)
+            regression = run_regression(df, target_for_reg)
         except Exception as e:
             regression = {"error": str(e)}
+    else:
+        regression = None
 
 
     # If target is categorical -> classification
