@@ -23,8 +23,12 @@ from analyzer import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('datasets/upload', views.upload_dataset, name=('upload_dataset')),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('datasets/', views.my_datasets, name='my_datasets'),
+    path('datasets/upload/', views.upload_dataset, name=('upload_dataset')),
     path('datasets/<int:pk>', views.dataset_detail, name='dataset_detail'),
+    path('', include('analyzer.urls')),
+    path('register', views.register, name='register'),
 ]
 
 if settings.DEBUG:

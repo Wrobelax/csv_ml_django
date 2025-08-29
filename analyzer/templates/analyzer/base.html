@@ -38,7 +38,35 @@
 
     {% block extra_head %}{% endblock %}
 </head>
+
+<nav class="navbar navbar-expand navbar-dark mb-3" style="background:#222;border-radius:.5rem;padding:.25rem .75rem;">
+    <a class="navbar-brand" href="{% url 'my_datasets' %}">CSV-ML</a>
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'my_datasets' %}">My datasets</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'upload_dataset' %}">Upload</a></li>
+    </ul>
+
+    <ul class="navbar-nav ml-auto">
+        {% if user.is_authenticated %}
+            <li class="nav-item"><span class="navbar-text mr-2">Hi, {{ user.username }}!</span></li>
+            <li class="nav-item"><a class="btn btn-sm btn-outline-light" href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+            <li class="nav-item"><a class="btn btn-sm btn-outline-light mr-2" href="{% url 'login' %}">Login</a></li>
+            <li class="nav-item"><a class="btn btn-sm btn-light" href="{% url 'register' %}">Register</a></li>
+        {% endif %}
+    </ul>
+</nav>
+
 <body>
+    <nav class="mb-3">
+        {% if user.is_authenticated %}
+            <span>Welcome,  {{ user.username }}!</span>
+            <a href="{% url 'logout' %}" class="btn btn-sm btn-danger ml-2">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="btn btn-sm btn-primary">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-sm btn-secondary">Register</a>
+        {% endif %}
+    </nav>
     <div class="container">
         {% block content %}{% endblock %}
     </div>

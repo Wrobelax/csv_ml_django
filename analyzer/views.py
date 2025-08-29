@@ -1,6 +1,9 @@
 import pandas as pd
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponseForbidden
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
 from .pipelines.pipeline import full_pipeline
@@ -13,6 +16,28 @@ from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
 
 
+# === Registering new users and user-related functions ===
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user) # Auto login after signing
+            return redirect('upload_dataset')
+
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'accounts/register.html', {'form': form})
+
+
+@login_required
+def my_datasets(request):
+    qs =UploadedDataset.objects.filter(owner=request.user).order_by('-uploaded_at')
+    return render(request, 'analyzer/my_datasets.html', {'datasets': qs})
+
+
+# === Supporting functions ===
 def fig_to_base64(fig):
     buf = io.BytesIO()
     fig.savefig(buf, format='png', bbox_inches='tight')
@@ -21,6 +46,7 @@ def fig_to_base64(fig):
     return base64.b64encode(buf.read()).decode('ascii')
 
 
+# === Plotting functions ===
 def plot_prediction_distribution(y_pred):
     if y_pred is None:
         return None
@@ -128,12 +154,14 @@ def plot_regression_pred_actual(y_true, y_pred):
     return fig_to_base64(fig)
 
 
+# === Main function for file processing ===
+@login_required
 def upload_dataset(request):
     """
     GET: Shows form.
     POST: Saves file, runs analysis (synchronous), redirect to detail.
     """
-
+    dataset_owner = request.user
     reg_plot = None
 
     if request.method == 'POST' and request.FILES.get('file'):
@@ -245,12 +273,18 @@ def upload_dataset(request):
     return render(request, 'analyzer/upload.html', {'form': form})
 
 
+# === Main function for data display ===
+@login_required
 def dataset_detail(request, pk):
     """
-    Details view of upload: metadata, first 5 rows and summary.
+    Details view of upload: metadata, first 5 rows, summary, plots.
     """
 
+    # Checking logged in user (or SU)
     dataset = get_object_or_404(UploadedDataset, pk=pk)
+    if not (dataset.owner.id == request.user.id or request.user.is_superuser):
+        return HttpResponseForbidden("You are not authorized to view this dataset.")
+
     analysis = dataset.analysis
     regression = dataset.regression
     ml_results = getattr(dataset, 'ml_results', None)

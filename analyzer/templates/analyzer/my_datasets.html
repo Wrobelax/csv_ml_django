@@ -1,0 +1,41 @@
+{% extends "analyzer/base.html" %}
+
+{% block content %}
+<h2 class="mb-3">My datasets</h2>
+
+{% if datasets %}
+    <div class="table-responsive">
+        <table class="table table-dark table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name / File</th>
+                    <th>Rows</th>
+                    <th>Cols</th>
+                    <th>status</th>
+                    <th>Uploaded</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in datasets %}
+                <tr>
+                    <td>{{ d.id }}</td>
+                    <td>{{ d.name|default:d.original_filename }}</td>
+                    <td>{{ d.n_rows|default:"-" }}</td>
+                    <td>{{ d.n_cols|default:"-" }}</td>
+                    <td>{{ d.status }}</td>
+                    <td>{{ d.uploaded_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{ url 'dataset_detail' d.id %}" class="btn btn-sm btn-primary">Open</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p>No dataset yet.</p>
+    <a class="btn btn-primary" href="{% url 'upload_dataset' %}">Upload dataset</a>
+{% endif %}
+{% endblock %}

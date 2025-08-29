@@ -1,12 +1,13 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 import pandas as pd
+from django.contrib.auth.models import User
 
 
 
 class UploadedDataset(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    owner = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.SET_NULL)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='datasets')
     original_filename = models.CharField(max_length=255)
     file = models.FileField(upload_to='datasets/')
     n_rows = models.IntegerField(null=True, blank=True)

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'analyzer',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -48,10 +49,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
-MEDIA_ROOT = BASE_DIR / '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+
+# Login/Logout
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = 'my_datasets'
+LOGOUT_REDIRECT_URL = 'accounts/login/'
 
 TEMPLATES = [
     {
