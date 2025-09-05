@@ -1,8 +1,8 @@
 # *CSV ML Django*
 ___
-![Status](https://img.shields.io/badge/project_status-in_progress\open-darkblue)
+![Status](https://img.shields.io/badge/project_status-complete\closed-darkgreen)
 
-![Status](https://img.shields.io/badge/testing-in_progress-darkblue)
+![Status](https://img.shields.io/badge/testing-done-darkgreen)
 
 A Django web application for analyzing CSV datasets using machine learning models. Users can upload datasets, run ML analyses, and view results on a dashboard.
 
@@ -31,13 +31,15 @@ This Django project provides an interface for uploading CSV datasets and running
 ### Screenshots
 **1. Login/Registration page**
 **2. Dataset upload page**
-![upload.png](ml_data/upload.png)
+![upload.png](ml_data/screens/upload.png)
 **3. Dataset detail page** showing available analyses
-![datasets.png](ml_data/datasets.png)
+![datasets.png](ml_data/screens/datasets.png)
 **4. ML result page** with metrics and plots
-![ml_results1.png](ml_data/ml_results1.png)
-![ml_results2.png](ml_data/ml_results2.png)
-![ml_results3.png](ml_data/ml_results3.png)
+![ml_results1.png](ml_data/screens/ml_results1.png)
+![ml_results2.png](ml_data/screens/ml_results2.png)
+![ml_results3.png](ml_data/screens/ml_results3.png)
+**5. Zoomed chart**(auto-zoom)
+![ml_results3.png](ml_data/screens/ml_results_zoomed.png)
 ___
 
 ## Features
