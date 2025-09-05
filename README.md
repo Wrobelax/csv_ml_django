@@ -31,9 +31,13 @@ This Django project provides an interface for uploading CSV datasets and running
 ### Screenshots
 **1. Login/Registration page**
 **2. Dataset upload page**
+![upload.png](ml_data/upload.png)
 **3. Dataset detail page** showing available analyses
+![datasets.png](ml_data/datasets.png)
 **4. ML result page** with metrics and plots
-**5. User dashboard** displaying all user datasets
+![ml_results1.png](ml_data/ml_results1.png)
+![ml_results2.png](ml_data/ml_results2.png)
+![ml_results3.png](ml_data/ml_results3.png)
 ___
 
 ## Features
@@ -165,3 +169,4 @@ The dashboard (/dashboard/) shows:
 ___
 
 ## *Conclusion*
+This project showcases the combination of web
