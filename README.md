@@ -31,7 +31,7 @@ This Django project provides an interface for uploading CSV datasets and running
 ### Screenshots
 **1. Login/Registration page**
 **2. Dataset upload page**
-![upload.png](ml_data/screens/upload.png)
+![image](https://github.com/user-attachments/assets/02c4b02a-4290-4eae-9d35-8534b70680c8)
 **3. Dataset detail page** showing available analyses
 ![datasets.png](ml_data/screens/datasets.png)
 **4. ML result page** with metrics and plots
