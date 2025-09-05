@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse, HttpResponseForbidden
 from .forms import UploadedDatasetForm
 from .models import UploadedDataset
@@ -33,8 +34,18 @@ def register(request):
 
 @login_required
 def my_datasets(request):
-    qs =UploadedDataset.objects.filter(owner=request.user).order_by('-uploaded_at')
+    qs = UploadedDataset.objects.filter(owner=request.user).order_by('-uploaded_at')
     return render(request, 'analyzer/my_datasets.html', {'datasets': qs})
+
+
+@login_required
+def delete_dataset(request, pk):
+    dataset = get_object_or_404(UploadedDataset, pk=pk, owner=request.user)
+    if request.method == "POST":
+        dataset.delete()
+        messages.success(request, 'Dataset deleted')
+        return redirect('my_datasets')
+    return render(request, 'analyzer/confirm_delete.html', {'dataset': dataset})
 
 
 # === Supporting functions ===
