@@ -11,13 +11,6 @@ from .ml_classification import (
 import numpy as np
 
 
-def _nice_name(key: str) -> str:
-    """
-    Let's sprinkle this boi with cool name.
-    """
-    return key.replace("_", " ").replace("classification", "").title().strip()
-
-
 def detect_task_type(df, target_col: str) -> str:
     """
     Automatically checks if data is for regression or classification.
@@ -112,13 +105,13 @@ def full_pipeline(file_path: str) -> dict:
         }
 
     # Display name for each model.
-    if ml_results:
-        for k,v in list(ml_results.items()):
-            display = _nice_name(k)
-            ml_results[k]["model_name"] = display
+    formatted_name = {}
+    for model_name, data in ml_results.items():
+        display = str(model_name).replace("_", " ").title()
+        formatted_name[display] = data
 
     return {
         "analysis": analysis,
         "regression": regression,
-        "ml_results": ml_results,
+        "ml_results": formatted_name,
     }

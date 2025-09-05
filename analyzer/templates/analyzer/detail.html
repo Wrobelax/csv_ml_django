@@ -91,7 +91,7 @@
     {% for model_name, model_data in ml_results.items %}
         {% if model_data %}
         <div class="card mb-3">
-            <div class="card-header bg-secondary text-white">{{ model_name|format_model }}</div>
+            <div class="card-header bg-secondary text-white">{{ model_name }}</div>
             <div class="card-body">
                 <p><strong>Accuracy:</strong> {{ model_data.accuracy|floatformat:3 }}</p>
                 <div class="table-responsive">
