@@ -32,3 +32,65 @@ def test_upload_creates_dataset(client):
     assert UploadedDataset.objects.count() == 1
     dataset = UploadedDataset.objects.first()
     assert dataset.owner == user
+
+
+@pytest.mark.django_db
+def test_analysis_results_requires_login(client):
+    url = reverse('dataset_detail', args=[1])
+    response = client.get(url)
+
+    assert response.status_code == 302
+    assert "/login" in response.url
+
+
+@pytest.mark.django_db
+def test_analysis_results_not_found(client):
+    user = User.objects.create_user(username='testuser', password='pass123')
+    client.login(username='testuser', password='pass123')
+
+    url = reverse('dataset_detail', args=[999])
+    response = client.get(url)
+
+    assert response.status_code == 404
+
+
+# === Dashboard tests ===
+@pytest.mark.django_db
+def test_dashboard_requires_login(client):
+    url = reverse('my_datasets')
+    response = client.get(url)
+
+    assert response.status_code == 302
+    assert "/login" in response.url
+
+
+@pytest.mark.django_db
+def test_dashboard_empty_for_new_user(client):
+    user = User.objects.create_user(username='testuser', password='pass123')
+    client.login(username='testuser', password='pass123')
+
+    url = reverse('my_datasets')
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "No dataset" in content
+
+
+@pytest.mark.django_db
+def test_dashboard_shows_only_user_datasets(client):
+    user1 = User.objects.create_user(username='user1', password='pass123')
+    user2 = User.objects.create_user(username='user2', password='pass456')
+
+    UploadedDataset.objects.create(name='user1_file', file='file1.csv', owner=user1)
+    UploadedDataset.objects.create(name='user2_file', file='file2.csv', owner=user2)
+
+    client.login(username='user1',password='pass123')
+    url = reverse('my_datasets')
+    response = client.get(url)
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    assert "user1" in content
+    assert "user2" not in content
