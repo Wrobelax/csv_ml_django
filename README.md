@@ -169,4 +169,10 @@ The dashboard (/dashboard/) shows:
 ___
 
 ## *Conclusion*
-This project showcases the combination of web
+This project demonstrates a web-based platform that allows users to upload datasets, run machine learning algorithms, and visualize results. It combines Django web development, data processing, and ML integration in a single application.
+
+Key takeaways:
+- Seamless **dataset management** and user authentication.
+- Implementation of **KNN, Decision Tree, Logistic Regression, SVM, and Linear Regression** pipelines.
+- Clear **data visualization** and performance metrics.
+- Application of **testing** for reliability and maintainability.
