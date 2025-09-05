@@ -177,6 +177,11 @@ def upload_dataset(request):
         dataset.status = 'processing'
         dataset.save()
 
+        df = pd.read_csv(dataset.file.path)
+        dataset.n_rows = df.shape[0]
+        dataset.n_cols = df.shape[1]
+        dataset.save()
+
         # Run pipeline (returns Python-serializable dicts/lists)
         try:
             result = full_pipeline(dataset.file.path)
