@@ -126,8 +126,9 @@ csv_ml_django/
 |   ├── pipelines/                 # Machine learning functions
 |   |   ├── analysis.py
 |   |   ├── ml_classification.py
-|   |   ├── pipeline.py
+|   |   ├── pipelines.p
 |   |   └── regression.py
+|   ├── templates/
 |   ├── tests/                     # Unit tests
 |   |   ├── test_models.py
 |   |   ├── test_pipeline.py

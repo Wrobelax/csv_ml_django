@@ -1,5 +1,6 @@
 {% extends "analyzer/base.html" %}
 {% load custom_tags %}
+{% load custom_filters %}
 
 {% block content %}
 <h1 class="display-4">Analysis results for: {{ dataset.name }}</h1>
@@ -90,7 +91,7 @@
     {% for model_name, model_data in ml_results.items %}
         {% if model_data %}
         <div class="card mb-3">
-            <div class="card-header bg-secondary text-white">{{ model_name|title }} Classification</div>
+            <div class="card-header bg-secondary text-white">{{ model_name|format_model }}</div>
             <div class="card-body">
                 <p><strong>Accuracy:</strong> {{ model_data.accuracy|floatformat:3 }}</p>
                 <div class="table-responsive">

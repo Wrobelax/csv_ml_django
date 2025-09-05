@@ -115,7 +115,7 @@ def full_pipeline(file_path: str) -> dict:
     if ml_results:
         for k,v in list(ml_results.items()):
             display = _nice_name(k)
-            ml_results[k]["display_name"] = display
+            ml_results[k]["model_name"] = display
 
     return {
         "analysis": analysis,
