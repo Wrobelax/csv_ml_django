@@ -30,16 +30,17 @@ This Django project provides an interface for uploading CSV datasets and running
 
 ### Screenshots
 **1. Login/Registration page**
+![image](https://github.com/user-attachments/assets/31ec1fdf-8934-4db8-97d9-ede769009fd7)
 **2. Dataset upload page**
 ![image](https://github.com/user-attachments/assets/02c4b02a-4290-4eae-9d35-8534b70680c8)
 **3. Dataset detail page** showing available analyses
-![datasets.png](ml_data/screens/datasets.png)
+![image](https://github.com/user-attachments/assets/44272782-9b23-4a3a-bf15-915d07a18b1c)
 **4. ML result page** with metrics and plots
-![ml_results1.png](ml_data/screens/ml_results1.png)
-![ml_results2.png](ml_data/screens/ml_results2.png)
-![ml_results3.png](ml_data/screens/ml_results3.png)
+![image](https://github.com/user-attachments/assets/b92ffad9-9664-4ebf-a043-88a79edb67a6)
+![image](https://github.com/user-attachments/assets/bf043825-af67-4521-a2f1-5ab776f4c809)
+![image](https://github.com/user-attachments/assets/3cde14ad-5547-4ff4-a831-d72dd6d02c2e)
 **5. Zoomed chart**(auto-zoom)
-![ml_results3.png](ml_data/screens/ml_results_zoomed.png)
+![image](https://github.com/user-attachments/assets/3eecb072-bdf9-4126-b5f6-bb512102b539)
 ___
 
 ## Features
