@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 from analyzer import views
 
 
@@ -29,6 +30,7 @@ urlpatterns = [
     path('datasets/<int:pk>', views.dataset_detail, name='dataset_detail'),
     path('', include('analyzer.urls')),
     path('register', views.register, name='register'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 ]
 
 if settings.DEBUG:

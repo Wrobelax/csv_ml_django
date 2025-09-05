@@ -58,7 +58,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 # Login/Logout
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = 'my_datasets'
-LOGOUT_REDIRECT_URL = 'accounts/login/'
+LOGOUT_REDIRECT_URL = 'login'
 
 TEMPLATES = [
     {
