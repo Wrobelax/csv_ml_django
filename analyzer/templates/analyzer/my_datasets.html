@@ -27,7 +27,7 @@
                     <td>{{ d.status }}</td>
                     <td>{{ d.uploaded_at|date:"Y-m-d H:i" }}</td>
                     <td>
-                        <a href="{ url 'dataset_detail' d.id %}" class="btn btn-sm btn-primary">Open</a>
+                        <a href="{% url 'dataset_detail' d.id %}" class="btn btn-sm btn-primary">Open</a>
                     </td>
                 </tr>
                 {% endfor %}
